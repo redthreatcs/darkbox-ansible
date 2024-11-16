@@ -1,0 +1,25 @@
+- name: "Create a directory to hold the files"
+  file:
+    path: /tmp/bin_dir
+    state: directory
+  register: dir_creation
+
+- name: "Download chisel"
+  get_url:
+    url: "{{ chisel_url }}"
+    dest: "/tmp/{{ chisel_url | split('/') | last }}" 
+
+- name: "Extract chisel"
+  shell: "gunzip -c /tmp/{{ chisel_url | split('/') | last }} > /tmp/bin_dir/chisel"
+
+- name: "Move the chisel binary file to /usr/local/bin"
+  copy:
+    src: "/tmp/bin_dir/chisel"
+    dest: "/usr/local/bin/"
+    remote_src: true
+    mode: 0755
+
+- name: "Remove the bin directory"
+  file:
+    path: /tmp/bin_dir
+    state: absent

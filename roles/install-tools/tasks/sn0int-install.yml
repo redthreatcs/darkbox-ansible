@@ -1,0 +1,32 @@
+- name: "Create folder to hold git files"
+  file:
+    path: /tmp/bin_dir
+    state: directory
+
+- name: "Set install folder"
+  set_fact:
+    install_folder: "{{ sn0int | split('/') | last | split('.') | first }}" 
+
+- name: "Get sn0int"
+  git:
+    repo: "{{ sn0int }}"
+    dest: "/tmp/bin_dir/{{ install_folder }}"
+    single_branch: true
+    version: main
+
+- name: "Build sn0int"
+  shell: cargo build --release
+  args:
+    chdir: "/tmp/bin_dir/{{ install_folder }}"
+
+- name: "Install sn0int"
+  copy:
+    src: "/tmp/bin_dir/{{ install_folder }}/target/release/sn0int"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755
+
+- name: "Remove the bin directory"
+  file:
+    path: /tmp/bin_dir
+    state: absent

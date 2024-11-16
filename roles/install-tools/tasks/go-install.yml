@@ -1,0 +1,18 @@
+- name: "Make sure go path is in the .bashrc"
+  lineinfile:
+    path: "/home/{{ username }}/.bashrc"
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+
+- name: "Download golang"
+  # shell: "wget https://go.dev/dl/{{ go_filename }} -O /tmp/{{ go_filename }}"
+  get_url:
+    url: "https://go.dev/dl/{{ go_filename }}"
+    dest: "/tmp/{{ go_filename }}"
+    
+- name: "Install golang"
+  shell: "rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/{{ go_filename }}"
+
+- name: "Remove installer"
+  file:
+    path: "/tmp/{{ go_filename }}"
+    state: absent

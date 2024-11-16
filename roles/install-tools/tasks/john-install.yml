@@ -1,0 +1,68 @@
+- name: "Clone John repository"
+  git:
+    repo: https://github.com/openwall/john.git
+    dest: /tmp/john
+    single_branch: true
+    version: bleeding-jumbo
+
+- name: "Run configuration"
+  shell: ./configure
+  args:
+    chdir: /tmp/john/src
+
+- name: "Build John"
+  make:
+    chdir: /tmp/john/src
+
+- name: "Move it to /opt folder"
+  copy:
+    src: /tmp/john
+    dest: /opt
+    remote_src: true
+
+- name: "Get all the binaries related to john"
+  find:
+    paths: /opt/john/run
+    use_regex: true
+    patterns: "^[^.]*$"
+  register: john_bin_files
+
+- name: "Copy all the john binaries to /usr/local/bin"
+  copy:
+    src: "{{ item.path }}"
+    dest: /usr/local/bin
+    remote_src: true
+  loop: "{{ john_bin_files.files }}"
+
+- name: "Get all the .py files related to john"
+  find:
+    paths: /opt/john/run
+    patterns: "*.py"
+  register: john_py_files
+
+- name: "Initialize py_paths list"
+  set_fact:
+    py_paths: []
+
+- name: "Declare the .py paths"
+  set_fact:
+    py_paths: "{{ py_paths + [item.path] }}"
+  loop: "{{ john_py_files.files }}"
+
+- name: "Remove dmg2john.py since there is a dmg2john binary"
+  set_fact:
+    py_paths: "{{ py_paths | reject('equalto', '/opt/john/run/dmg2john.py') | list }}"
+
+- name: "Symbolically soft link the john .py files"
+  file:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item | split('/') | last | split('.') | first }}"
+    state: link
+    mode: 0755
+      # loop: "{{ john_py_files.files }}"
+  loop: "{{ py_paths }}"
+
+- name: "Remove the /tmp/john directory"
+  file:
+    path: /tmp/john
+    state: absent

@@ -1,0 +1,12 @@
+- name: "Get all the downloaded compressed files"
+  find:
+    paths: /tmp
+    use_regex: true
+    patterns: ".*\\.(gz|zip|7z)$"
+  register: compd_files
+
+- name: "Remove the files"
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ compd_files.files }}"

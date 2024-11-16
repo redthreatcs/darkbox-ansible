@@ -1,0 +1,19 @@
+- name: "Make sure the sudo group is present"
+  group:
+    name: sudo
+    state: present
+
+- name: "Add a sudo user called daniel"
+  user:
+    name: "{{ username }}"
+    comment: "{{ comment }}"
+    password: "$6$mysecretsalt$qJbapG68nyRab3gxvKWPUcs2g3t0oMHSHMnSKecYNpSi3CuZm.GbBqXO8BE6EI6P1JUefhA0qvD7b5LSh./PU1"
+    shell: /bin/bash
+    group: sudo
+    state: present
+    create_home: true
+
+- name: "Update and upgrade the system"
+  apt:
+    update_cache: true
+    upgrade: "yes"

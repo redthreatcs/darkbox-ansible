@@ -1,0 +1,17 @@
+- name: "Create the wordlists folder"
+  file:
+    path: /opt/wordlists
+    state: directory
+
+- name: "Get the seclist files"
+  git:
+    repo: "{{ seclist }}"
+    dest: /opt/wordlists
+    single_branch: true
+    version: master
+
+- name: "Change the permissions"
+  file:
+    path: /opt/wordlists
+    owner: "{{ username }}"
+    mode: 0550

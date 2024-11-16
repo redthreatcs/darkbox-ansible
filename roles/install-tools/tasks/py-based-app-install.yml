@@ -1,0 +1,62 @@
+- name: "Create a directory to hold the py apps"
+  file:
+    path: /opt/py_apps
+    state: directory
+
+- name: "Download the python based apps"
+  git:
+    repo: "{{ item }}"
+    dest: "/opt/py_apps/{{ item | split('/') | last | split('.') | first }}"
+    single_branch: true
+  loop: "{{ py_based_apps }}"
+
+- name: "Get the files that has setup.py or pyproject.toml"
+  find:
+    paths: /opt/py_apps
+    recurse: true
+    use_regex: true
+    patterns: "^(pyproject\\.toml|setup\\.py)$"
+  register: installable_apps
+
+- name: "Initialize an empty list for cloned paths"
+  set_fact:
+    clone_paths: []
+
+- name: "Initialize an empty list for installable paths"
+  set_fact:
+    installable_paths: []
+
+- name: "Initialize an empty list for all app names"
+  set_fact:
+    all_apps: []
+
+- name: "Declare all apps"
+  set_fact:
+    all_apps: "{{ all_apps + [item | split('/') | last | split('.') | first] }}"
+  loop: "{{ py_based_apps }}"
+
+- name: "Declare clone paths"
+  set_fact:
+    clone_paths: "{{ clone_paths + ['/opt/py_apps/' + item + '/'] }}"
+  loop: "{{ all_apps }}"
+
+- name: "Delclare installable paths"
+  set_fact:
+    installable_paths: "{{ installable_paths + [item.path | regex_replace('^(.*/).*$', '\\1')] }}"
+  loop: "{{ installable_apps.files }}"
+
+- name: "Declare non-installable paths"
+  set_fact:
+    non_installable_paths: "{{ clone_paths | difference(installable_paths) | list }}"
+  loop: "{{ installable_paths }}"
+
+- name: "Install the installables"
+  shell: pip install .
+  args:
+    chdir: "{{ item }}"
+  loop: "{{ installable_paths }}"
+
+- name: "Advice manual installation of non installable apps"
+  debug:
+    msg: "{{ item.split('/')[:-1] | last }} LOCATED AT {{ item }} REQUIRES MANUAL INSTALLATION"
+  loop: "{{ non_installable_paths }}"

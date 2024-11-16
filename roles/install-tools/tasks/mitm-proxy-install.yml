@@ -1,0 +1,34 @@
+- name: "Create folder to hold mitmproxy archive file"
+  file:
+    path: /tmp/bin_dir
+    state: directory
+
+- name: "Download mitmproxy"
+  get_url:
+    url: "{{ mitmproxy }}"
+    dest: "/tmp/{{ mitmproxy | split('/') | last }}"
+
+- name: "Extract the archive file"
+  unarchive:
+    src: "/tmp/{{ mitmproxy | split('/') | last }}"
+    dest: /tmp/bin_dir
+    remote_src: true
+
+- name: "Get mitmproxy files"
+  find:
+    paths: /tmp/bin_dir
+    patterns: "*"
+  register: mitmproxy_files
+
+- name: "Move mitmproxy to /usr/local/bin"
+  copy:
+    src: "{{ item.path }}"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755
+  loop: "{{ mitmproxy_files.files }}"
+
+- name: "Remove the bin directory"
+  file:
+    path: /tmp/bin_dir
+    state: absent

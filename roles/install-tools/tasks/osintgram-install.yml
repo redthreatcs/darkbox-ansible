@@ -1,0 +1,22 @@
+- name: "Declare install folder"
+  set_fact:
+    install_folder: "{{ osintgram | split('/') | last | split('.') | first }}"
+
+- name: "Download osintgram"
+  git:
+    repo: "{{ osintgram }}"
+    dest: "/opt/py_apps/{{ install_folder }}"
+    single_branch: true
+    version: master
+
+- name: "Install requirements"
+  pip:
+    requirements: requirements.txt
+    chdir: "/opt/py_apps/{{ install_folder }}"
+
+- name: "Install the app"
+  file:
+    src: "/opt/py_apps/{{ install_folder }}/main.py"
+    dest: /usr/local/bin/osintgram
+    state: link
+    mode: 0755

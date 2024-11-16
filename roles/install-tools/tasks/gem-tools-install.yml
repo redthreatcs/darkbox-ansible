@@ -1,0 +1,6 @@
+# https://github.com/IppSec/parrot-build/blob/master/roles/install-tools/tasks/gem-tools.yml
+- name: "Installing tools from Gems"
+  gem:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ gem_tools }}"

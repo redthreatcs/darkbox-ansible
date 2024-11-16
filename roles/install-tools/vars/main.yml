@@ -1,0 +1,83 @@
+package_names:
+  - vim
+  - neovim
+  - tmux
+  - build-essential
+  - cmake
+  - jq
+  - exiftool
+  - ruby
+  - ruby-dev
+  - unzip
+  - nmap
+  - ffuf
+  - libffi-dev
+  - p7zip-full
+  - gzip
+  - git
+  - python3-pip
+  - mc
+  # thc-hydra dependancies
+  - libssl-dev
+  - libssh-dev
+  - libidn11-dev
+  - libpcre3-dev
+  - libgtk2.0-dev
+  - default-libmysqlclient-dev
+  - libpq-dev
+  - libsvn-dev
+  - firebird-dev
+  - libncurses5-dev
+  # some john dependancies
+  - zlib1g-dev
+  - yasm
+  - pkg-config
+  - libgmp-dev
+  - libpcap-dev
+  - libbz2-dev
+  - libsqlite3-dev
+  - libseccomp-dev
+  - libsodium-dev
+  - publicsuffix
+
+username: daniel
+
+go_filename: go1.21.3.linux-amd64.tar.gz
+
+github_release_packages:
+  - https://github.com/hahwul/dalfox/releases/download/v2.9.0/dalfox_2.9.0_linux_amd64.tar.gz
+  - https://github.com/epi052/feroxbuster/releases/download/v2.10.0/x86_64-linux-feroxbuster.tar.gz
+  - https://github.com/assetnote/kiterunner/releases/download/v1.0.2/kiterunner_1.0.2_linux_amd64.tar.gz
+  - https://github.com/projectdiscovery/nuclei/releases/download/v3.0.1/nuclei_3.0.1_linux_amd64.zip
+
+gem_tools:
+  - logger
+  - stringio
+  - winrm
+  - builder
+  - erubi
+  - gssapi
+  - gyoku
+  - httpclient
+  - logging
+  - little-plugger
+  - nori
+  - rubyntlm
+  - winrm-fs
+  - evil-winrm
+
+hashcat_url: https://hashcat.net/files/hashcat-6.2.6.7z
+chisel_url: https://github.com/jpillora/chisel/releases/download/v1.9.1/chisel_1.9.1_linux_amd64.gz
+mitmproxy: https://downloads.mitmproxy.org/10.1.1/mitmproxy-10.1.1-linux.tar.gz
+sn0int: https://github.com/kpcyrd/sn0int.git
+spiderfoot: https://github.com/smicallef/spiderfoot.git
+osintgram: https://github.com/Datalux/Osintgram.git
+
+py_based_apps:
+  - https://github.com/sqlmapproject/sqlmap.git
+  - https://github.com/oppsec/Pinkerton.git
+  - https://github.com/SAPT01/HBSQLI.git
+  - https://github.com/google/gcp_scanner.git
+  - https://github.com/laramies/theHarvester.git
+
+seclist: https://github.com/danielmiessler/SecLists.git

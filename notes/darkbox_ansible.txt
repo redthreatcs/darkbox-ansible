@@ -1,0 +1,278 @@
+#### Introduction:
+Once upon a time, I came across an informative YouTube video created by IPPSec. In the video, he adeptly illustrates the configuration of a pentest box using Ansible, and you can watch it here. In his demonstration, he crafts an Ansible playbook to tailor a ParrotOS virtual machine to his specific preferences.
+
+Inspired by this, I decided to embark on my own journey of building a pentest box, all while automating the construction process with Ansible. The end goal is to create a virtual private server in the cloud or a virtual machine on my PC and execute an Ansible playbook to orchestrate the entire setup. Once the build process is complete, I can dive straight into playing Hack The Box.
+
+Indeed, it's worth noting that both ParrotOS and Kali Linux are based on Debian 11, whereas Debian 12 is the most current version as of the time of writing. For this particular build, I've opted to utilize a Debian 11 virtual machine in the cloud, which I'll then configure with the tools I'm currently using for playing Hack The Box.
+
+It's important to note that most pentesting distributions come preloaded with a plethora of pentesting tools. As time goes on, whenever I come across a new tool that is useful for playing Hack The Box, I'll integrate it into the Ansible configuration. You can access this configuration in: [insert location].
+
+#### Ansible
+Ansible is a powerful configuration management software that operates agentlessly. It empowers you to orchestrate configurations across a fleet of client nodes, all managed from a central controller node. Configuration settings for Ansible are defined in the ansible.cfg configuration file, while the list of client nodes is maintained in inventory files. When Ansible performs configurations on remote nodes, it leverages SSH, allowing you to opt for either password or SSH-key authentication methods.
+
+Ansible consists of a rich collection of modules, which includes both built-in modules and those contributed by the community. These modules serve as the building blocks for carrying out various configurations on client nodes. Typically, Ansible modules are designed to be platform-agnostic, offering cross-platform compatibility. However, you can also find OS-specific modules such as apt or yum. When it comes to configuring servers, Ansible employs playbooks, written in YAML format, to define configuration tasks. These playbooks utilize modules to execute specific actions. Additionally, Ansible introduces the concept of roles, also defined in YAML files, which enables the organization of complex configurations into more manageable, smaller operations.
+
+You can employ a module within a playbook or role, or you can invoke modules directly from the command line interface (CLI). For example, to verify the reachability of all client nodes, you can run the following command:
+
+```bash
+ansible all -m ping
+```
+
+To generate a full config file run:
+```
+sudo ansible-config init --disabled -t all > /etc/ansible/ansible.cfg
+```
+
+The Ansible inventory file is a critical component used to define and organize the hosts (target machines) that Ansible will manage. This inventory can be created in either .ini or .yml (YAML) format, depending on your preference and requirements.
+
+When using an .ini file format for the Ansible inventory, your inventory file will follow a specific structure. Here's what it typically looks like:
+
+```ini
+[web_servers]
+server1 ansible_host=192.168.1.10 ansible_user=your_user ansible_ssh_pass=your_password
+server2 ansible_host=192.168.1.11 ansible_user=your_user ansible_ssh_pass=your_password
+
+[db_servers]
+dbserver1 ansible_host=192.168.1.20 ansible_user=your_user ansible_ssh_pass=your_password
+```
+
+In this .ini format, hosts are organized into groups denoted by square brackets (e.g., [web_servers], [db_servers]). Each host within a group is listed, and additional attributes for each host are specified using key-value pairs. For example, ansible_host defines the host's IP address or hostname, ansible_user specifies the SSH user for connecting to the host, and ansible_ssh_pass provides the SSH password for authentication (though using SSH keys is more secure and recommended).
+
+This .ini-formatted inventory file structure provides a straightforward and easily readable way to define hosts and their attributes for Ansible to manage. It's a popular choice, especially for simpler use cases.
+
+Note that while the example provided uses ansible_ssh_pass for password-based authentication, using SSH keys for authentication is a more secure and recommended practice.
+
+It's worth mentioning that the .yml (YAML) format offers a more versatile and expressive way to define your inventory, particularly for complex scenarios and larger infrastructures.
+
+```yaml
+---
+web_servers:
+  hosts:
+    server1:
+      ansible_host: 192.168.1.10
+      ansible_user: your_user
+      ansible_ssh_pass: your_password
+    server2:
+      ansible_host: 192.168.1.11
+      ansible_user: your_user
+      ansible_ssh_pass: your_password
+
+db_servers:
+  hosts:
+    dbserver1:
+      ansible_host: 192.168.1.20
+      ansible_user: your_user
+      ansible_ssh_pass: your_password
+```
+
+To run a playbook with increased verbosity and a custom inventory location when your inventory file is not in the default location specified in the ansible.cfg file, you have two options. You can either update the inventory location in the configuration file or use the -i flag to specify the inventory location when executing the playbook. Here's how you can do it:
+
+Option 1: Modify the configuration file
+
+1. Open the ansible.cfg file.
+
+2. Locate the section that defines the inventory file location.
+
+3. Update the inventory file path to point to your desired location.
+
+Option 2: Use the -i flag
+
+When running your playbook, include the -i flag followed by the path to your custom inventory file. This will override the default inventory location temporarily for that specific playbook run.
+
+Here's an example of the command to use with the -i flag:
+
+```bash
+ansible-playbook -i /path/to/custom/inventory.ini -v your_playbook.yml
+```
+
+This command runs your playbook with the custom inventory file located at /path/to/custom/inventory.ini and with a verbosity (specified by the -v flag). You increase the verbosity by adding more "v"s like: -vvvv
+
+#### Ansible Roles:
+Ansible roles simplify the organization and automatic loading of interconnected variables, files, tasks, handlers, and other Ansible components through a predefined directory structure. Once your content is structured within roles, it becomes effortlessly shareable and reusable. To create an Ansible role, use the following command:
+
+```bash
+mkdir roles
+ansible-galaxy init roles/<ROLE_NAME>
+```
+Once you create a role, it will create the following folder structure:
+
+roles/
+    common/               # this hierarchy represents a "role"
+        tasks/            #
+            main.yml      #  <-- tasks file can include smaller files if warranted
+        handlers/         #
+            main.yml      #  <-- handlers file
+        templates/        #  <-- files for use with the template resource
+            ntp.conf.j2   #  <------- templates end in .j2
+        files/            #
+            bar.txt       #  <-- files for use with the copy resource
+            foo.sh        #  <-- script files for use with the script resource
+        vars/             #
+            main.yml      #  <-- variables associated with this role
+        defaults/         #
+            main.yml      #  <-- default lower priority variables for this role
+        meta/             #
+            main.yml      #  <-- role dependencies
+        library/          # roles can also include custom modules
+        module_utils/     # roles can also include custom module_utils
+        lookup_plugins/   # or other types of plugins, like lookup in this case
+
+    webtier/              # same kind of structure as "common" was above, done for the webtier role
+    monitoring/           # ""
+    fooapp/               # ""
+
+#### Ansible variables
+In Ansible, variable declaration can be done either within a playbook or as part of Ansible roles. To declare variables directly within a playbook, you can follow this structure:
+
+```yaml
+roles:
+  - role: app_user
+    vars:
+      myname: Ian
+      packages:
+        - vim
+        - git
+
+```
+
+In this example, myname is a variable with the value "Ian," and packages is a list containing the values "vim" and "git."
+
+Alternatively, if you're using Ansible roles, variable declarations are typically placed within the vars/main.yml file as follows:
+
+myname: Ian
+packages:
+  - vim
+  - git
+
+This approach keeps your role-specific variables organized and accessible in one central location.
+
+### Frequently used Ansible modules
+Following are some builtin ansible modules that are very useful.
+
+* debug
+The debug module enables the printing of statements during execution. This capability proves useful for debugging variables or expressions without interrupting the playbook's flow. It becomes particularly valuable when used in tandem with the when: directive, as this directive offers a means to execute a module based on specific conditions being met.
+
+* file
+The file module has two key functions. It permits the configuration of attributes for files, directories, or symlinks, and their targets. Additionally, it offers the capability to delete files, symlinks, or directories as required.
+
+* copy
+The copy module shares similarities with the file module. It enables the copying of a file from either the local or remote machine to a designated location on the remote machine.
+
+* get_url
+The get_url module serves the purpose of downloading files from HTTP, HTTPS, or FTP sources to the remote server. It's important to note that the remote server must have direct access to the specified remote resource for this module to function effectively.
+
+* shell
+The shell module operates by accepting the command name followed by a list of space-separated arguments.
+
+For its execution, either a free-form command or the cmd parameter is obligatory, as illustrated in the provided examples. This module closely resembles the ansible.builtin.command module, with the key distinction being that the shell module runs the command through a shell (/bin/sh) on the remote node.
+
+The advantage of the shell module is that it leverages the Linux shell to execute commands, which allows for the use of environment variables and various shell features like pipes, offering greater flexibility in command execution.
+
+* find
+The find module is designed to provide a list of files based on specific criteria, with the ability to combine multiple criteria through logical AND operations.
+
+It offers the flexibility to utilize regular expressions (regex) patterns for matching a specific set of files, and it also supports glob-like patterns, such as "*.py," to retrieve a set of files based on file name patterns.
+
+* unarchive
+The unarchive module serves the purpose of unpacking an archive. It's important to note that it doesn't unpack compressed files that don't contain an archive, which means it doesn't support formats like .gz (gzip) or .7z.
+
+By default, the module copies the source file from the local system to the target machine before performing the unpacking process. However, you have the option to set remote_src=yes to unpack an archive that already exists on the target system without the need for copying it from the local system.
+
+* make
+The make module is designed to run targets defined in a Makefile, enabling you to build and install from a source code repository.
+
+To install a package that has been built, you can employ the target: install approach within the Makefile. This module facilitates efficient build and installation processes from source code repositories.
+
+* git
+The git module is used for efficiently managing Git checkouts of repositories, allowing you to deploy files or software seamlessly. This module simplifies the process of handling Git repositories in deployment workflows.
+
+
+<Ansible architecture image>
+
+
+#### Darkbox Ansible Configuration
+Now that we have become more familiar with Ansible, let's delve into constructing the pentest box.
+
+Folder structure:
+darkbox-build:
+	- inventory
+		- hetz.yml
+	- main.yml
+	
+We can put the vps details in the hetz.yml inside the inventory folder. 
+vps:
+  hosts: <Server IP>
+
+Then we can define the first task as below to debug the connectivity:
+
+- name: "Building Darkbox"
+  hosts: vps
+  remote_user: root
+
+tasks:
+  - name: "Debug connection"
+    debug:
+      msg: "Hello World"
+
+If the connection is established correctly, you will get the debug message. Make sure to add the ssh keys if you are using the key based authentication.
+
+Now, lets create our first role to configure a user. We can initialize the role by running:
+
+```bash
+ansible-galaxy init roles/configure-user
+```
+
+Once the role has been initialized, you can enhance it by editing the main.yml file within the role's task folder. Furthermore, you have the option to include additional variables by placing them inside the var folder.
+
+You can generate the user's password by executing the following command. Simply replace "mypassword" with your desired password and "mysecretsalt" with your preferred salt.
+
+```bash
+ansible all -i inventory, -m debug -a "msg={{ 'mypassword' | password_hash('sha512', 'mysecretsalt') }}"
+```
+
+tasks/main.yml
+
+```yaml
+---
+- name: "Make sure the sudo group is present"
+  group:
+    name: sudo
+    state: present
+
+- name: "Add a sudo user called daniel"
+  user:
+    name: "{{ username }}"
+    comment: "{{ comment }}"
+    password: "$6$mysecretsalt$qJbapG68nyRab3gxvKWPUcs2g3t0oMHSHMnSKecYNpSi3CuZm.GbBqXO8BE6EI6P1JUefhA0qvD7b5LSh./PU1"
+    shell: /bin/bash
+    group: sudo
+    state: present
+    create_home: true
+```
+
+vars/main.yml
+
+```yaml
+---
+username: daniel
+comment: "Daniel Rocket"
+```
+
+Then include this role in the main file
+
+```yaml
+roles:
+    - role: "roles/configure-user"
+```
+
+Finally, lets talk about the application installation process. The applications are installed using install-tools role. During the application installation process, they are systematically categorized into various tasks within the "install-tools" role. This organization is structured as follows:
+
+1. Tools with unique or complex setup requirements are assigned dedicated task .yml files. For instance, tasks are individually defined for building applications like John and Hydra from source due to their specific setup intricacies.
+2. Tools that are downloaded from github and has a .tar.gz or .zip extension has its own task file. This is because I can use the unarchive module to download extract and install the apps.
+3. Tools distributed as .gz and .7z archives, such as Chisel and Hashcat, receive their own task files to streamline the installation process.
+4. Installations that uses the package manager has its own task file.
+5. While the installation of Python-based applications is partially standardized, some manual intervention may be necessary to address naming irregularities and ensure successful linking.
+
+Unlike other pentest distributions that typically install applications in /usr/share, this setup employs the /opt directory to manage both applications and wordlists. The installation process commences by downloading the applications to the /tmp folder, followed by the transfer of these files to their respective directories. Any temporary files that no longer serve a purpose are automatically cleaned up at the completion of the installation.
+
+It's important to be aware that the current configuration operates in server mode, lacking a desktop environment. This absence of a graphical interface can pose challenges when running applications like Burp Suite or Wireshark, which typically require a desktop environment to function properly. Consequently, in the future, we will explore how to extend this Ansible script to include the installation of a desktop environment and GUI-based pentesting tools.

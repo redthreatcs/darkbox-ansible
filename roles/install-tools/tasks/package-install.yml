@@ -1,0 +1,5 @@
+- name: "Check if the necessary packages are available"
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ package_names }}"

@@ -1,0 +1,26 @@
+- name: "Create a directory to hold the files"
+  file:
+    path: /tmp/bin_dir
+    state: directory
+  register: dir_creation
+
+- name: "Download hashcat"
+  # shell: "wget {{ hashcat_url }} -O /tmp/{{ hashcat_url | split('/') | last }}"
+  get_url:
+    url: "{{ hashcat_url }}"
+    dest: "/tmp/{{ hashcat_url | split('/') | last }}"
+
+- name: "Extract hashcat"
+  shell: "7za x -y /tmp/{{ hashcat_url | split('/') | last }} -o/tmp/bin_dir"
+
+- name: "Move the .bin file to /usr/local/bin"
+  copy:
+    src: "/tmp/bin_dir/{{ hashcat_url | split('/') | last | split('.7z') | first }}/hashcat.bin"
+    dest: "/usr/local/bin/hashcat"
+    remote_src: true
+    mode: 0755
+
+- name: "Remove the bin directory"
+  file:
+    path: /tmp/bin_dir
+    state: absent

@@ -1,0 +1,6 @@
+- name: "Downloading apps from github release"
+  # shell: "wget {{ item }} -O /tmp/{{ item | split('/') | last }}"
+  get_url:
+    url: "{{ item }}"
+    dest: "/tmp/{{ item | split('/') | last }}"
+  loop: "{{ github_release_packages }}"

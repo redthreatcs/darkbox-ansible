@@ -1,0 +1,8 @@
+---
+- name: "Building Darkbox"
+  hosts: vps
+  remote_user: root  
+
+  roles:
+    - role: "roles/configure-user"
+    - role: "roles/install-tools"

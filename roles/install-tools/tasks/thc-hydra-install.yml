@@ -1,0 +1,25 @@
+- name: "Clone the hydra repository"
+  git:
+    repo: https://github.com/vanhauser-thc/thc-hydra.git
+    dest: /tmp/thc-hydra
+    single_branch: true
+    version: master
+
+- name: "Run configuration"
+  shell: ./configure
+  args:
+    chdir: /tmp/thc-hydra
+
+- name: "Build thc-hydra"
+  make:
+    chdir: /tmp/thc-hydra
+
+- name: "Run thc-hydra installer"
+  make:
+    chdir: /tmp/thc-hydra
+    target: install
+
+- name: "Remove thc-hydra folder"
+  file:
+    path: /tmp/thc-hydra
+    state: absent

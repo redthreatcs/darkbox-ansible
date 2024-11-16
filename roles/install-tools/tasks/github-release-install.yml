@@ -1,0 +1,52 @@
+- name: "Create a directory to hold the files"
+  file:
+    path: /tmp/bin_dir
+    state: directory
+  register: dir_creation
+
+- name: "Downloading apps from github release"
+  # shell: "wget {{ item }} -O /tmp/{{ item | split('/') | last }}"
+  get_url:
+    url: "{{ item }}"
+    dest: "/tmp/{{ item | split('/') | last }}"
+  loop: "{{ github_release_packages }}"
+
+- name: "List all the downloaded tar.gz and zip files"
+  find:
+    paths: /tmp
+    use_regex: true
+    patterns: ".*\\.(tar.gz|zip)$"
+  register: arch_files
+
+- name: "Extract the downloaded tar.gz and zip files"
+  unarchive:
+    # copy: false
+    src: "{{ item.path }}"
+    dest: /tmp/bin_dir
+    remote_src: true
+  loop: "{{ arch_files.files }}"
+ 
+- name: "Get the binaries and exclude the others"
+  find:
+    paths: /tmp/bin_dir
+    file_type: "file"
+    use_regex: true
+    patterns: "^(?!.*\\.(md|txt)$).*"
+  register: git_bins
+
+- name: "Display the binaries"
+  debug:
+    msg: "{{ git_bins.files }}"
+
+- name: "Copy the files to /usr/local/bin"
+  copy:
+    src: "{{ item.path }}"
+    dest: /usr/local/bin/
+    remote_src: true
+    mode: 0755
+  loop: "{{ git_bins.files }}"
+
+- name: "Remove the bin directory"
+  file:
+    path: /tmp/bin_dir
+    state: absent
